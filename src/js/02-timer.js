@@ -11,8 +11,6 @@ const startBtn = document.querySelector("[data-start]");
 let myIntervalId;
 let selectedDate;
 
-
-// Функція для підрахунку значень часу
 function convertMs(ms) {
     const second = 1000;
     const minute = second * 60;
@@ -26,56 +24,57 @@ function convertMs(ms) {
 
     return { days, hours, minutes, seconds };
 }
+
 function addLeadingZero(value) {
     return value.toString().padStart(2, "0");
 }
+
+startBtn.disabled = true;
+
 const options = {
     enableTime: true,
     time_24hr: true,
     defaultDate: new Date(),
     minuteIncrement: 1,
 
-    onClose(selectedDates) {
-        const selectedDateTime = new Date(selectedDates[0]);
-        const currentDateTime = new Date();
-        if (selectedDates[0] <= options.defaultDate) {
-            Notiflix.Report.warning("Please choose a date in the future");
+    onClose(selectedDates, dateStr, instance) {
+        selectedDate = instance.selectedDates[0];
+
+        if (selectedDate <= new Date()) {
+            Notiflix.Report.warning("Please choose a date and time in the future");
             startBtn.disabled = true;
         } else {
             startBtn.disabled = false;
-            selectedDate = selectedDateTime;
         }
     },
 };
 
 flatpickr("#datetime-picker", options);
 
-startBtn.addEventListener("click", () => {
-    const selectedDate = new Date(flatpickr("#datetime-picker").selectedDates[0]);
+function updateTimer() {
+    const currentTime = new Date();
+    const timeDifference = (selectedDate - currentTime) / 1000;
 
-    function updateTimer() {
-        const timedifference = selectedDate - new Date();
-        if (timedifference <= 0) {
-            clearInterval(myIntervalId);
-        } else {
-            const timeObject = convertMs(timedifference);
-            daysEl.textContent = addLeadingZero(timeObject.days);
-            hoursEl.textContent = addLeadingZero(timeObject.hours);
-            minutesEl.textContent =  addLeadingZero(timeObject.minutes);
-            secondsEl.textContent =  addLeadingZero(timeObject.seconds);
-        }
+    if (timeDifference <= 0) {
+        clearInterval(myIntervalId);
+        daysEl.textContent = "00";
+        hoursEl.textContent = "00";
+        minutesEl.textContent = "00";
+        secondsEl.textContent = "00";
+        startBtn.disabled = true;
+    } else {
+        const timeObject = convertMs(timeDifference * 1000);
+        daysEl.textContent = addLeadingZero(timeObject.days);
+        hoursEl.textContent = addLeadingZero(timeObject.hours);
+        minutesEl.textContent = addLeadingZero(timeObject.minutes);
+        secondsEl.textContent = addLeadingZero(timeObject.seconds);
+        startBtn.disabled = false;
     }
-    clearInterval(myIntervalId);
+}
+
+startBtn.addEventListener("click", () => {
     updateTimer();
-    myIntervalId = setInterval(updateTimer, 1000);
+    myIntervalId = setInterval(updateTimer, 1000)
 });
-
-
-
-
-
-
-
-
 
 
